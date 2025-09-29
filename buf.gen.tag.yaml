@@ -1,5 +1,7 @@
-version: v1
+version: v2
 plugins:  
-  - name: protogentag
+  - local: protogentag
     out: .
-    opt: paths=source_relative,xxx=graphql+"-" bson+"-"
+    opt:
+      - paths=source_relative
+      - xxx=graphql+"-" bson+"-"

@@ -1,5 +1,6 @@
-version: v1
+version: v2
 plugins:
-  - name: go
+  - remote: buf.build/protocolbuffers/go
     out: .
-    opt: paths=source_relative
+    opt:
+      - paths=source_relative

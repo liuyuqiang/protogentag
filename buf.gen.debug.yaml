@@ -1,5 +1,6 @@
-version: v1
+version: v2
 plugins:
-  - name: debug
+  - local: debug
     out: .
-    opt: ./debug
+    opt:
+      - ./debug

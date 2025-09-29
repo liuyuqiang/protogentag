@@ -1,18 +1,16 @@
-version: v1
-name: buf.build/liuyuqiang/protogentag
+version: v2
 deps:
-  -  buf.build/googleapis/googleapis
-
-breaking:
-  use:
-    - FILE
-
+  - buf.build/googleapis/googleapis
 lint:
   use:
-    - BASIC
+    - STANDARD
     - FILE_LOWER_SNAKE_CASE
   except:
     - ENUM_NO_ALLOW_ALIAS
     - IMPORT_NO_PUBLIC
     - PACKAGE_DIRECTORY_MATCH
     - PACKAGE_SAME_DIRECTORY
+  disallow_comment_ignores: true
+breaking:
+  use:
+    - FILE
