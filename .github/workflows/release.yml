@@ -54,11 +54,8 @@ jobs:
         uses: bufbuild/buf-action@v1
         with:
           version: "1.28.1"
+          token: ${{ secrets.BUF_TOKEN }}
           setup_only: true
-
-      - name: Log in to BSR
-        run: |
-          echo "${{ secrets.BUF_TOKEN }}" | buf registry login buf.build --username ${{ secrets.BUF_USERNAME }} --token-stdin
 
       - name: Build and push Docker image
         run: |
