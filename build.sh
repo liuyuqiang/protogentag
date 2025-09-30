@@ -6,7 +6,7 @@ set -e
 
 # 配置变量
 PLUGIN_NAME="buf.build/liuyuqiang/protogentag"
-PLUGIN_VERSION="v1.0.4"
+PLUGIN_VERSION="${PLUGIN_VERSION:-v1.0.4}"
 DOCKER_IMAGE="${PLUGIN_NAME}:${PLUGIN_VERSION}"
 
 echo "构建 Docker 镜像: ${DOCKER_IMAGE}"
@@ -37,7 +37,7 @@ if [ "$1" = "--push" ]; then
     # 检查组织权限
     echo "检查组织权限..."
     if ! buf registry organization info buf.build/liuyuqiang >/dev/null 2>&1; then
-        echo "❌ 无法访问组织 buf.build/buftool"
+        echo "❌ 无法访问组织 buf.build/liuyuqiang"
         echo "请确保你有该组织的管理员权限"
         exit 1
     fi
@@ -73,9 +73,9 @@ if [ "$1" = "--push" ]; then
         echo ""
         echo "调试信息："
         echo "- 当前用户: $(buf registry whoami)"
-        echo "- 组织: buf.build/buftool"
+        echo "- 组织: buf.build/liuyuqiang"
         echo "- 镜像: ${DOCKER_IMAGE}"
-        echo "- 插件: ${PLUGIN_NAME}"buf registry organization info
+        echo "- 插件: ${PLUGIN_NAME}"
         exit 1
     fi
 else
