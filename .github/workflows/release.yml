@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Plugin version (e.g., v1.0.5)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  PLUGIN_NAME: buf.build/liuyuqiang/protogentag
+  REGISTRY: ghcr.io
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Buf
+        uses: bufbuild/buf-action@v1
+        with:
+          version: "1.28.1"
+          setup_only: true
+
+      - name: Log in to BSR
+        run: |
+          echo "${{ secrets.BUF_TOKEN }}" | buf registry login buf.build --username ${{ secrets.BUF_USERNAME }} --token-stdin
+
+      - name: Build and push Docker image
+        run: |
+          DOCKER_IMAGE="${{ env.PLUGIN_NAME }}:${{ steps.version.outputs.version }}"
+          echo "Building Docker image: $DOCKER_IMAGE"
+          
+          # 构建 Docker 镜像
+          docker build --platform linux/amd64 -t "$DOCKER_IMAGE" .
+          
+          # 推送到 GitHub Container Registry
+          GHCR_IMAGE="${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.version.outputs.version }}"
+          docker tag "$DOCKER_IMAGE" "$GHCR_IMAGE"
+          docker push "$GHCR_IMAGE"
+
+      - name: Push plugin to BSR
+        run: |
+          DOCKER_IMAGE="${{ env.PLUGIN_NAME }}:${{ steps.version.outputs.version }}"
+          echo "Pushing plugin to BSR: $DOCKER_IMAGE"
+          
+          # 设置环境变量抑制警告
+          export BUF_BETA_SUPPRESS_WARNINGS=1
+          
+          # 推送插件到 BSR
+          buf beta registry plugin push \
+            --visibility public \
+            --image "$DOCKER_IMAGE"
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: Release ${{ steps.version.outputs.version }}
+          body: |
+            ## 变更日志
+            
+            - 发布版本 ${{ steps.version.outputs.version }}
+            - 插件已推送到 BSR: ${{ env.PLUGIN_NAME }}:${{ steps.version.outputs.version }}
+            - Docker 镜像已推送到 GitHub Container Registry
+            
+            ## 使用方法
+            
+            ```yaml
+            # buf.gen.yaml
+            version: v2
+            plugins:
+              - plugin: buf.build/liuyuqiang/protogentag
+                out: .
+                opt:
+                  - xxx="graphql+\"-\" bson+\"-\""
+            ```
+          draft: false
+          prerelease: false
