@@ -31,8 +31,17 @@ if [ "$1" = "--push" ]; then
         fi
         echo "✅ BSR 登录成功"
     else
-        echo "✅ 已登录 BSR"
+        echo "✅ 已登录 BSR: $(buf registry whoami)"
     fi
+    
+    # 检查组织权限
+    echo "检查组织权限..."
+    if ! buf registry organization info buf.build/liuyuqiang >/dev/null 2>&1; then
+        echo "❌ 无法访问组织 buf.build/buftool"
+        echo "请确保你有该组织的管理员权限"
+        exit 1
+    fi
+    echo "✅ 组织权限检查通过"
     
     # 推送插件
     echo "正在推送插件..."
@@ -48,15 +57,25 @@ if [ "$1" = "--push" ]; then
         --visibility public \
         --image "${DOCKER_IMAGE}"
     
-    if [ $? -eq 0 ]; then
+    PUSH_EXIT_CODE=$?
+    
+    if [ $PUSH_EXIT_CODE -eq 0 ]; then
         echo "✅ 插件推送完成: ${PLUGIN_NAME}:${PLUGIN_VERSION}"
     else
-        echo "❌ 插件推送失败"
+        echo "❌ 插件推送失败 (退出码: $PUSH_EXIT_CODE)"
         echo ""
         echo "可能的解决方案："
-        echo "1. 检查 BSR 权限设置"
-        echo "2. 联系 Buf 支持团队获取插件推送权限"
-        echo "3. 查看 BSR_PLUGIN_GUIDE.md 获取详细说明"
+        echo "1. 确保你有 liuyuqiang 组织的管理员权限"
+        echo "2. 检查 Docker 镜像是否正确构建和标记"
+        echo "3. 尝试手动推送 Docker 镜像到 Docker Hub 或 Quay"
+        echo "4. 联系 Buf 支持团队获取插件推送权限"
+        echo "5. 查看 BSR_PLUGIN_GUIDE.md 获取详细说明"
+        echo ""
+        echo "调试信息："
+        echo "- 当前用户: $(buf registry whoami)"
+        echo "- 组织: buf.build/buftool"
+        echo "- 镜像: ${DOCKER_IMAGE}"
+        echo "- 插件: ${PLUGIN_NAME}"buf registry organization info
         exit 1
     fi
 else
