@@ -53,7 +53,7 @@ jobs:
       - name: Set up Buf
         uses: bufbuild/buf-action@v1
         with:
-          version: "1.28.1"
+          version: "1.35.0"
           token: ${{ secrets.BUF_TOKEN }}
           setup_only: true
 
@@ -84,12 +84,10 @@ jobs:
             --image "$DOCKER_IMAGE"
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.version.outputs.version }}
-          release_name: Release ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
           body: |
             ## 变更日志
             
@@ -110,3 +108,5 @@ jobs:
             ```
           draft: false
           prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
