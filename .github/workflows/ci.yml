@@ -55,6 +55,7 @@ jobs:
         uses: bufbuild/buf-action@v1
         with:
           version: "1.28.1"
+          token: ${{ secrets.BUF_TOKEN }}
           input: "."
           format: true
           lint: true
